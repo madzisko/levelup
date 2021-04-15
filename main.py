@@ -23,3 +23,24 @@ def counter():
 @app.get("/hello/{name}", response_model=HelloResp)
 async def read_item(name: str):
     return HelloResp(msg=f"Hello {name}")
+
+
+@app.get("/method", status_code=200)
+def give_method():
+    return {"method": "GET"}
+
+@app.put("/method", status_code=200)
+def give_method():
+    return {"method": "PUT"}
+
+@app.options("/method", status_code=200)
+def give_method():
+    return {"method": "OPTIONS"}
+
+@app.delete("/method", status_code=200)
+def give_method():
+    return {"method": "DELETE"}
+
+@app.post("/method", status_code=201)
+def give_method():
+    return {"method": "POST"}
