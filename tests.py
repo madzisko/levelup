@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 import pytest
-from main import app
+from main import app, HelloResp
 
 client = TestClient(app)
 
@@ -15,14 +15,14 @@ def test_read_main():
 def test_hello_name(name):
     response = client.get(f"/hello/{name}")
     assert response.status_code == 200
-    assert response.text == f'"Hello {name}"'
+    assert response.json() == {"msg": f'Hello {name}'}
 
 
 def test_counter():
     response = client.get(f"/counter")
     assert response.status_code == 200
-    assert response.text == "1"
+    assert response.text == '"1"'
     # 2nd Try
     response = client.get(f"/counter")
     assert response.status_code == 200
-    assert response.text == "2"
+    assert response.text == '"2"'
