@@ -86,7 +86,9 @@ async def auth(password: Optional[str] = '', password_hash: Optional[str] = ''):
 async def pat_reg(patient: Patient):
     app.patcounter += 1
     today = datetime.now().astimezone().strftime("%Y-%m-%d")
-    delta = len(patient.surname) + len(patient.name)
+    al_name = ''.join(c for c in patient.name if c.isalpha())
+    al_surname = ''.join(c for c in patient.surname if c.isalpha())
+    delta = len(al_name) + len(al_surname)
     vac_day = (datetime.now().astimezone() + timedelta(days=delta)).strftime('%Y-%m-%d')
     return PatientResp(
         id=app.patcounter,
