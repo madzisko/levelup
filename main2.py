@@ -85,9 +85,9 @@ async def auth(password: Optional[str] = '', password_hash: Optional[str] = ''):
 @app.post("/register", response_model=PatientResp, status_code=201)
 async def pat_reg(patient: Patient):
     app.patcounter += 1
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.now().astimezone().strftime("%Y-%m-%d")
     delta = len(patient.surname) + len(patient.name)
-    vac_day = (datetime.now() + timedelta(days=delta)).strftime('%Y-%m-%d')
+    vac_day = (datetime.now().astimezone() + timedelta(days=delta)).strftime('%Y-%m-%d')
     return PatientResp(
         id=app.patcounter,
         name=patient.name,

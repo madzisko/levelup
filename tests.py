@@ -80,8 +80,8 @@ def test_register():
    "id": 1,
    "name": "Jan",
    "surname": "Kowalskiii",
-   "register_date": "2021-04-19",
-   "vaccination_date": "2021-05-02"
+   "register_date": "2021-04-20",
+   "vaccination_date": "2021-05-03"
 }
 
     response = client.post(
@@ -93,6 +93,6 @@ def test_register():
         "id": 2,
         "name": "",
         "surname": "",
-        "register_date": "2021-04-19",
-        "vaccination_date": "2021-04-19"
+        "register_date": "2021-04-20",
+        "vaccination_date": "2021-04-20"
     }
