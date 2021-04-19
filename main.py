@@ -1,5 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query, status
 from pydantic import BaseModel
+import hashlib
+from fastapi.responses import JSONResponse
+
 
 app = FastAPI()
 app.counter = 0
@@ -44,3 +47,18 @@ def give_method():
 @app.post("/method", status_code=201)
 def give_method():
     return {"method": "POST"}
+
+
+@app.get("/auth", status_code = 401)
+async def auth(password: str, password_hash:str):
+    if password and password_hash:
+        password = password.encode('utf-8')
+        h = hashlib.sha512(password)
+
+        if h.hexdigest() == password_hash:
+            return JSONResponse(status_code=204)
+        else:
+            return JSONResponse(status_code=401)
+    return JSONResponse(status_code=401)
+
+
