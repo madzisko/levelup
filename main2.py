@@ -3,14 +3,28 @@ from pydantic import BaseModel
 import hashlib
 from fastapi.responses import JSONResponse
 from typing import Optional
+from datetime import timedelta, datetime
+
 
 
 app = FastAPI()
 app.counter = 0
+app.patcounter = 0
 
 
 class HelloResp(BaseModel):
     msg: str
+
+class Patient(BaseModel):
+    name: str
+    surname: str
+
+class PatientResp(BaseModel):
+    id: int
+    name: str
+    surname: str
+    register_date: str
+    vaccination_date: str
 
 
 @app.get("/")
@@ -62,4 +76,16 @@ async def auth(password: Optional[str] = '', password_hash: Optional[str]= ''):
             return JSONResponse(status_code=401)
     return JSONResponse(status_code=401)
 
-
+@app.post("/register", response_model=PatientResp, status_code=201)
+async def pat_reg(patient: Patient):
+    app.patcounter += 1
+    today = datetime.now().strftime("%Y-%m-%d")
+    delta = len(patient.surname) + len(patient.name)
+    vac_day = (datetime.now() + timedelta(days=delta)).strftime('%Y-%m-%d')
+    return PatientResp(
+        id=app.patcounter,
+        name=patient.name,
+        surname=patient.surname,
+        register_date=today,
+        vaccination_date=vac_day,
+    )

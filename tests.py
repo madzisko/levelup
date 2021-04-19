@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 import pytest
-from main import app, HelloResp
+from main2 import app, HelloResp
 
 client = TestClient(app)
 
@@ -68,3 +68,18 @@ def test_hash():
 
     response = client.get(f"/auth?")
     assert response.status_code == 401
+
+def test_register():
+    response = client.post(
+        "/register",
+        json={"name": "Jan",
+   "surname": "Kowalski"},
+    )
+    assert response.status_code == 201
+    assert response.json() == {
+   "id": 1,
+   "name": "Jan",
+   "surname": "Kowalski",
+   "register_date": "2021-04-19",
+   "vaccination_date": "2021-04-30"
+}
