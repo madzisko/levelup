@@ -1,10 +1,9 @@
-from fastapi import FastAPI, Query, status
+from fastapi import FastAPI
 from pydantic import BaseModel
 import hashlib
 from fastapi.responses import JSONResponse
 from typing import Optional
-from datetime import timedelta, datetime
-
+from datetime import timedelta, datetime, date
 
 
 app = FastAPI()
@@ -15,16 +14,18 @@ app.patcounter = 0
 class HelloResp(BaseModel):
     msg: str
 
+
 class Patient(BaseModel):
-    name: str
-    surname: str
+    name: str = ''
+    surname: str = ''
+
 
 class PatientResp(BaseModel):
     id: int
-    name: str
-    surname: str
-    register_date: str
-    vaccination_date: str
+    name: str = ''
+    surname: str = ''
+    register_date: date
+    vaccination_date: date
 
 
 @app.get("/")
@@ -47,25 +48,29 @@ async def read_item(name: str):
 def give_method():
     return {"method": "GET"}
 
+
 @app.put("/method", status_code=200)
 def give_method():
     return {"method": "PUT"}
+
 
 @app.options("/method", status_code=200)
 def give_method():
     return {"method": "OPTIONS"}
 
+
 @app.delete("/method", status_code=200)
 def give_method():
     return {"method": "DELETE"}
+
 
 @app.post("/method", status_code=201)
 def give_method():
     return {"method": "POST"}
 
 
-@app.get("/auth", status_code = 401)
-async def auth(password: Optional[str] = '', password_hash: Optional[str]= ''):
+@app.get("/auth", status_code=401)
+async def auth(password: Optional[str] = '', password_hash: Optional[str] = ''):
     if password and password_hash:
         password = password.encode('utf-8')
         h = hashlib.sha512(password)
@@ -75,6 +80,7 @@ async def auth(password: Optional[str] = '', password_hash: Optional[str]= ''):
         else:
             return JSONResponse(status_code=401)
     return JSONResponse(status_code=401)
+
 
 @app.post("/register", response_model=PatientResp, status_code=201)
 async def pat_reg(patient: Patient):

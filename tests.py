@@ -73,13 +73,26 @@ def test_register():
     response = client.post(
         "/register",
         json={"name": "Jan",
-   "surname": "Kowalski"},
+   "surname": "Kowalskiii"},
     )
     assert response.status_code == 201
     assert response.json() == {
    "id": 1,
    "name": "Jan",
-   "surname": "Kowalski",
+   "surname": "Kowalskiii",
    "register_date": "2021-04-19",
-   "vaccination_date": "2021-04-30"
+   "vaccination_date": "2021-05-02"
 }
+
+    response = client.post(
+        "/register",
+        json={"name": ""},
+    )
+    assert response.status_code == 201
+    assert response.json() == {
+        "id": 2,
+        "name": "",
+        "surname": "",
+        "register_date": "2021-04-19",
+        "vaccination_date": "2021-04-19"
+    }
