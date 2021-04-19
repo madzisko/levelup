@@ -65,3 +65,6 @@ def test_hash():
 
     response = client.get(f"/auth?password=&password_hash=")
     assert response.status_code == 401
+
+    response = client.get(f"/auth?")
+    assert response.status_code == 401

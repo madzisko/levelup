@@ -51,7 +51,7 @@ def give_method():
 
 
 @app.get("/auth", status_code = 401)
-async def auth(password: Optional[str], password_hash: Optional[str]):
+async def auth(password: Optional[str] = '', password_hash: Optional[str]= ''):
     if password and password_hash:
         password = password.encode('utf-8')
         h = hashlib.sha512(password)
