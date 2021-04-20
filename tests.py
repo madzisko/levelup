@@ -96,3 +96,18 @@ def test_register():
         "register_date": "2021-04-20",
         "vaccination_date": "2021-04-20"
     }
+
+def test_patient_id():
+    response = client.get('/patient/1')
+    assert response.json() == {
+        "id": 1,
+        "name": "Jan",
+        "surname": "Kowalskiii",
+        "register_date": "2021-04-20",
+        "vaccination_date": "2021-05-03"
+    }
+    assert response.status_code == 200
+    response = client.get('/patient/0')
+    assert response.status_code == 400
+    response = client.get('/patient/10')
+    assert response.status_code == 404

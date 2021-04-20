@@ -8,7 +8,7 @@ from datetime import timedelta, datetime, date
 
 app = FastAPI()
 app.counter = 0
-app.patcounter = 0
+app.patients = dict()
 
 
 class HelloResp(BaseModel):
@@ -84,16 +84,27 @@ async def auth(password: Optional[str] = '', password_hash: Optional[str] = ''):
 
 @app.post("/register", response_model=PatientResp, status_code=201)
 async def pat_reg(patient: Patient):
-    app.patcounter += 1
+    id = len(app.patients)+1
     today = datetime.now().astimezone().strftime("%Y-%m-%d")
     al_name = ''.join(c for c in patient.name if c.isalpha())
     al_surname = ''.join(c for c in patient.surname if c.isalpha())
     delta = len(al_name) + len(al_surname)
     vac_day = (datetime.now().astimezone() + timedelta(days=delta)).strftime('%Y-%m-%d')
-    return PatientResp(
-        id=app.patcounter,
+    pat1 = PatientResp(
+        id=id,
         name=patient.name,
         surname=patient.surname,
         register_date=today,
         vaccination_date=vac_day,
     )
+    app.patients[id] = pat1
+    return pat1
+
+
+@app.get("/patient/{id}", status_code=200)
+async def get_patient(id: int):
+    if id < 1:
+        return JSONResponse(status_code=400)
+    elif id > len(app.patients):
+        return JSONResponse(status_code=404)
+    return app.patients[id]
