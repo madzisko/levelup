@@ -1,16 +1,22 @@
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, status, Cookie, HTTPException, Depends
 from pydantic import BaseModel
 import hashlib
 from fastapi.responses import JSONResponse, HTMLResponse, Response
 from typing import Optional
 from datetime import timedelta, datetime, date
 from fastapi.templating import Jinja2Templates
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+import secrets
 
 
 app = FastAPI()
 app.counter = 0
 app.patients = dict()
 templates = Jinja2Templates(directory="templates")
+app.secret_key = "OMGitshouldbesomethinguniqueandlongatakwlasciwietoczemuinEnglish"
+app.access_tokens = []
+
+security = HTTPBasic()
 
 
 class HelloResp(BaseModel):
@@ -110,3 +116,35 @@ def hello_html(request: Request):
     today = datetime.now().astimezone().strftime("%Y-%m-%d")
     return templates.TemplateResponse("index.html.j2", {
         "request": request, "curr_date": today})
+
+
+@app.post("/login_session")
+def login_session(response: Response, credentials: HTTPBasicCredentials = Depends(security)):
+    correct_username = secrets.compare_digest(credentials.username, "4dm1n")
+    correct_password = secrets.compare_digest(credentials.password, "NotSoSecurePa$$")
+    if not (correct_username and correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    else:
+        session_token = hashlib.sha256(f"{credentials.username}{credentials.password}{app.secret_key}".encode()).hexdigest()
+        app.access_tokens.append(session_token)
+        response.set_cookie(key="session_token", value=session_token)
+        return {"message": "Come to the dark side, we have cookies"}
+
+
+@app.post("/login_token")
+def login_token(credentials: HTTPBasicCredentials = Depends(security)):
+    correct_username = secrets.compare_digest(credentials.username, "4dm1n")
+    correct_password = secrets.compare_digest(credentials.password, "NotSoSecurePa$$")
+    if not (correct_username and correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    else:
+        token_value = hashlib.sha256(f"{credentials.username}{credentials.password}{app.secret_key}".encode()).hexdigest()
+        return {"token": token_value}
