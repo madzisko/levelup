@@ -1,14 +1,16 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from pydantic import BaseModel
 import hashlib
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse, Response
 from typing import Optional
 from datetime import timedelta, datetime, date
+from fastapi.templating import Jinja2Templates
 
 
 app = FastAPI()
 app.counter = 0
 app.patients = dict()
+templates = Jinja2Templates(directory="templates")
 
 
 class HelloResp(BaseModel):
@@ -44,29 +46,16 @@ async def read_item(name: str):
     return HelloResp(msg=f"Hello {name}")
 
 
-@app.get("/method", status_code=200)
-def give_method():
-    return {"method": "GET"}
+@app.api_route(
+    path="/method", methods=["GET", "POST", "DELETE", "PUT", "OPTIONS"], status_code=200
+)
+def read_request(request: Request, response: Response):
+    request_method = request.method
 
+    if request_method == "POST":
+        response.status_code = status.HTTP_201_CREATED
 
-@app.put("/method", status_code=200)
-def give_method():
-    return {"method": "PUT"}
-
-
-@app.options("/method", status_code=200)
-def give_method():
-    return {"method": "OPTIONS"}
-
-
-@app.delete("/method", status_code=200)
-def give_method():
-    return {"method": "DELETE"}
-
-
-@app.post("/method", status_code=201)
-def give_method():
-    return {"method": "POST"}
+    return {"method": request_method}
 
 
 @app.get("/auth", status_code=401)
@@ -108,3 +97,16 @@ async def get_patient(id: int):
     elif id > len(app.patients):
         return JSONResponse(status_code=404)
     return app.patients[id]
+
+
+@app.get("/request_query_string_discovery/")
+def read_item(request: Request):
+    print(f"{request.query_params=}")
+    return request.query_params
+
+
+@app.get("/hello", response_class=HTMLResponse)
+def hello_html(request: Request):
+    today = datetime.now().astimezone().strftime("%Y-%m-%d")
+    return templates.TemplateResponse("index.html.j2", {
+        "request": request, "curr_date": today})
