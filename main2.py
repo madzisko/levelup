@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, status, HTTPException, Depends, Cookie
 from pydantic import BaseModel
 import hashlib
-from fastapi.responses import JSONResponse, HTMLResponse, Response
+from fastapi.responses import JSONResponse, HTMLResponse, Response, PlainTextResponse
 from typing import Optional
 from datetime import timedelta, datetime, date
 from fastapi.templating import Jinja2Templates
@@ -181,4 +181,4 @@ def welcome_token(token: Optional[str] = None, format: Optional[str] = None):
         """)
             return response
         else:
-            return "Welcome!"
+            return PlainTextResponse(content='Welcome!')
