@@ -14,7 +14,8 @@ app.counter = 0
 app.patients = dict()
 templates = Jinja2Templates(directory="templates")
 app.secret_key = "OMGitshouldbesomethinguniqueandlongatakwlasciwietoczemuinEnglish"
-app.access_tokens = []
+app.token = ""
+app.session = ""
 
 security = HTTPBasic()
 
@@ -130,7 +131,7 @@ def login_session(response: Response, credentials: HTTPBasicCredentials = Depend
         )
     else:
         session_token = hashlib.sha256(f"{credentials.username}{credentials.password}{app.secret_key}".encode()).hexdigest()
-        app.access_tokens.append(session_token)
+        app.session = session_token
         response.set_cookie(key="session_token", value=session_token)
         return {"message": "Come to the dark side, we have cookies"}
 
@@ -147,4 +148,5 @@ def login_token(credentials: HTTPBasicCredentials = Depends(security)):
         )
     else:
         token_value = hashlib.sha256(f"{credentials.username}{credentials.password}{app.secret_key}".encode()).hexdigest()
+        app.token = token_value
         return {"token": token_value}
