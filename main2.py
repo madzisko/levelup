@@ -120,7 +120,7 @@ def hello_html(request: Request):
 
 
 @app.post("/login_session")
-def login_session(response: Response, credentials: HTTPBasicCredentials = Depends(security)):
+def login_session(credentials: HTTPBasicCredentials = Depends(security)):
     correct_username = secrets.compare_digest(credentials.username, "4dm1n")
     correct_password = secrets.compare_digest(credentials.password, "NotSoSecurePa$$")
     if not (correct_username and correct_password):
@@ -132,8 +132,9 @@ def login_session(response: Response, credentials: HTTPBasicCredentials = Depend
     else:
         session_token = hashlib.sha256(f"{credentials.username}{credentials.password}{app.secret_key}".encode()).hexdigest()
         app.session = session_token
+        response = JSONResponse(status_code=status.HTTP_201_CREATED)
         response.set_cookie(key="session_token", value=session_token)
-        return JSONResponse(status_code=status.HTTP_201_CREATED)
+        return response
 
 
 @app.post("/login_token")
