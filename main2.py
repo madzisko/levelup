@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, status, Cookie, HTTPException, Depends
+from fastapi import FastAPI, Request, status, HTTPException, Depends, Cookie
 from pydantic import BaseModel
 import hashlib
 from fastapi.responses import JSONResponse, HTMLResponse, Response
@@ -80,30 +80,30 @@ async def auth(password: Optional[str] = '', password_hash: Optional[str] = ''):
 
 @app.post("/register", response_model=PatientResp, status_code=201)
 async def pat_reg(patient: Patient):
-    id = len(app.patients)+1
+    idd = len(app.patients)+1
     today = datetime.now().astimezone().strftime("%Y-%m-%d")
     al_name = ''.join(c for c in patient.name if c.isalpha())
     al_surname = ''.join(c for c in patient.surname if c.isalpha())
     delta = len(al_name) + len(al_surname)
     vac_day = (datetime.now().astimezone() + timedelta(days=delta)).strftime('%Y-%m-%d')
     pat1 = PatientResp(
-        id=id,
+        id=idd,
         name=patient.name,
         surname=patient.surname,
         register_date=today,
         vaccination_date=vac_day,
     )
-    app.patients[id] = pat1
+    app.patients[idd] = pat1
     return pat1
 
 
 @app.get("/patient/{id}", status_code=200)
-async def get_patient(id: int):
-    if id < 1:
+async def get_patient(idd: int):
+    if idd < 1:
         return JSONResponse(status_code=400)
-    elif id > len(app.patients):
+    elif idd > len(app.patients):
         return JSONResponse(status_code=404)
-    return app.patients[id]
+    return app.patients[idd]
 
 
 @app.get("/request_query_string_discovery/")
@@ -144,10 +144,41 @@ def login_token(credentials: HTTPBasicCredentials = Depends(security)):
     if not (correct_username and correct_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Basic"},
         )
     else:
         token_value = hashlib.sha256(f"{credentials.username}{credentials.password}{app.secret_key}".encode()).hexdigest()
         app.token = token_value
         return JSONResponse(status_code=status.HTTP_201_CREATED, content={"token": token_value})
+
+
+@app.get("/welcome_session")
+def welcome_session(cookie: Optional[str] = Cookie(None)):
+    if not cookie or cookie != app.session:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
+
+
+@app.get("/welcome_token")
+def welcome_token(token: Optional[str] = None, format: Optional[str] = None):
+    if not token or token != app.token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
+    else:
+        if format == "json":
+            return {"message": "Welcome!"}
+        elif format == "html":
+            response = HTMLResponse(content="""
+        <html>
+            <head>
+                <title>Some HTML in here</title>
+            </head>
+            <body>
+                <h1>Welcome!</h1>
+            </body>
+        </html>
+        """)
+            return response
+        else:
+            return "Welcome!"
