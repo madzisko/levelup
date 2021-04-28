@@ -133,7 +133,7 @@ def login_session(response: Response, credentials: HTTPBasicCredentials = Depend
         session_token = hashlib.sha256(f"{credentials.username}{credentials.password}{app.secret_key}".encode()).hexdigest()
         app.session = session_token
         response.set_cookie(key="session_token", value=session_token)
-        return {"message": "Come to the dark side, we have cookies"}
+        return JSONResponse(status_code=status.HTTP_201_CREATED)
 
 
 @app.post("/login_token")
@@ -149,4 +149,4 @@ def login_token(credentials: HTTPBasicCredentials = Depends(security)):
     else:
         token_value = hashlib.sha256(f"{credentials.username}{credentials.password}{app.secret_key}".encode()).hexdigest()
         app.token = token_value
-        return {"token": token_value}
+        return JSONResponse(status_code=status.HTTP_201_CREATED, content={"token": token_value})
