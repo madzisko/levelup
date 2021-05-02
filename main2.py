@@ -152,8 +152,9 @@ def login_token(credentials: HTTPBasicCredentials = Depends(security)):
 
 
 @app.get("/welcome_session")
-def welcome_session(cookie: Optional[str] = Cookie(None), format: Optional[str] = None):
-    if not cookie or cookie != app.session:
+def welcome_session(request: Request, format: Optional[str] = None):
+    session_token = request.cookies.get("session_token")
+    if not session_token or session_token != app.session:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED
         )
