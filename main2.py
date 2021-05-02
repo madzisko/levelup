@@ -167,9 +167,9 @@ def welcome_token(token: Optional[str] = None, format: Optional[str] = None):
         )
     else:
         if format == "json":
-            return {"message": "Welcome!"}
+            return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Welcome!"})
         elif format == "html":
-            response = HTMLResponse(content="""
+            response = HTMLResponse(status_code=status.HTTP_200_OK, content="""
         <html>
             <head>
                 <title>Some HTML in here</title>
@@ -181,4 +181,4 @@ def welcome_token(token: Optional[str] = None, format: Optional[str] = None):
         """)
             return response
         else:
-            return PlainTextResponse(content='Welcome!')
+            return PlainTextResponse(status_code=status.HTTP_200_OK, content='Welcome!')
