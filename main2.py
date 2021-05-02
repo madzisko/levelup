@@ -227,10 +227,9 @@ def welcome_token(token: Optional[str] = None, format: Optional[str] = None):
         )
     else:
         app.token = ""
-        app.session = ""
         return RedirectResponse(
             url=f"/logged_out?format={format}",
-            status_code=status.HTTP_302_FOUND,
+            status_code=status.HTTP_303_SEE_OTHER,
         )
 
 
@@ -242,10 +241,8 @@ def welcome_session(request: Request, format: Optional[str] = None):
             status_code=status.HTTP_401_UNAUTHORIZED
         )
     else:
-        Response.delete_cookie("session_token", path='/welcome_session')
-        app.token = ""
         app.session = ""
         return RedirectResponse(
             url=f"/logged_out?format={format}",
-            status_code=status.HTTP_302_FOUND,
+            status_code=status.HTTP_303_SEE_OTHER,
         )
