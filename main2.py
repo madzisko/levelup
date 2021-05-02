@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, status, HTTPException, Depends, Cookie
 from pydantic import BaseModel
 import hashlib
-from fastapi.responses import JSONResponse, HTMLResponse, Response, PlainTextResponse
+from fastapi.responses import JSONResponse, HTMLResponse, Response, PlainTextResponse, RedirectResponse
 from typing import Optional
 from datetime import timedelta, datetime, date
 from fastapi.templating import Jinja2Templates
@@ -200,3 +200,52 @@ def welcome_token(token: Optional[str] = None, format: Optional[str] = None):
             return response
         else:
             return PlainTextResponse(status_code=status.HTTP_200_OK, content='Welcome!')
+
+
+@app.get("/logged_out")
+def logged_out(format: Optional[str] = None):
+    if format == "json":
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Logged out!"})
+    elif format == "html":
+        response = HTMLResponse(status_code=status.HTTP_200_OK, content="""
+    <html>
+        <body>
+            <h1>Logged out!</h1>
+        </body>
+    </html>
+    """)
+        return response
+    else:
+        return PlainTextResponse(status_code=status.HTTP_200_OK, content='Logged out!')
+
+
+@app.delete("/logout_token")
+def welcome_token(token: Optional[str] = None, format: Optional[str] = None):
+    if not token or token != app.token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
+    else:
+        app.token = ""
+        app.session = ""
+        return RedirectResponse(
+            url=f"/logged_out?format={format}",
+            status_code=status.HTTP_302_FOUND,
+        )
+
+
+@app.delete("/logout_session")
+def welcome_session(request: Request, format: Optional[str] = None):
+    session_token = request.cookies.get("session_token")
+    if not session_token or session_token != app.session:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
+    else:
+        Response.delete_cookie("session_token", path='/welcome_session')
+        app.token = ""
+        app.session = ""
+        return RedirectResponse(
+            url=f"/logged_out?format={format}",
+            status_code=status.HTTP_302_FOUND,
+        )
