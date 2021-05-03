@@ -14,8 +14,8 @@ app.counter = 0
 app.patients = dict()
 templates = Jinja2Templates(directory="templates")
 app.secret_key = "OMGitshouldbesomethinguniqueandlongatakwlasciwietoczemuinEnglish"
-app.token = ""
-app.session = ""
+app.token = list()
+app.session = list()
 
 security = HTTPBasic()
 
@@ -121,40 +121,46 @@ def hello_html(request: Request):
 
 @app.post("/login_session")
 def login_session(credentials: HTTPBasicCredentials = Depends(security)):
-    correct_username = secrets.compare_digest(credentials.username, "4dm1n")
-    correct_password = secrets.compare_digest(credentials.password, "NotSoSecurePa$$")
-    if not (correct_username and correct_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Basic"},
-        )
-    else:
-        session_token = hashlib.sha256(f"{credentials.username}{credentials.password}{app.secret_key}".encode()).hexdigest()
-        app.session = session_token
-        response = JSONResponse(status_code=status.HTTP_201_CREATED)
-        response.set_cookie(key="session_token", value=session_token)
-        return response
+    # correct_username = secrets.compare_digest(credentials.username, "4dm1n")
+    # correct_password = secrets.compare_digest(credentials.password, "NotSoSecurePa$$")
+    # if not (correct_username and correct_password):
+    #     raise HTTPException(
+    #         status_code=status.HTTP_401_UNAUTHORIZED,
+    #         detail="Incorrect username or password",
+    #         headers={"WWW-Authenticate": "Basic"},
+    #     )
+    # else:
+    unique_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
+    session_token = hashlib.sha256(f"{credentials.username}{credentials.password}{app.secret_key}{unique_time}".encode()).hexdigest()
+    app.session.append(session_token)
+    if len(app.session) > 3:
+        app.session.pop(0)
+    response = JSONResponse(status_code=status.HTTP_201_CREATED)
+    response.set_cookie(key="session_token", value=session_token)
+    return response
 
 
 @app.post("/login_token")
 def login_token(credentials: HTTPBasicCredentials = Depends(security)):
-    correct_username = secrets.compare_digest(credentials.username, "4dm1n")
-    correct_password = secrets.compare_digest(credentials.password, "NotSoSecurePa$$")
-    if not (correct_username and correct_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-        )
-    else:
-        token_value = hashlib.sha256(f"{credentials.username}{credentials.password}{app.secret_key}".encode()).hexdigest()
-        app.token = token_value
-        return JSONResponse(status_code=status.HTTP_201_CREATED, content={"token": token_value})
+    # correct_username = secrets.compare_digest(credentials.username, "4dm1n")
+    # correct_password = secrets.compare_digest(credentials.password, "NotSoSecurePa$$")
+    # if not (correct_username and correct_password):
+    #     raise HTTPException(
+    #         status_code=status.HTTP_401_UNAUTHORIZED,
+    #     )
+    # else:
+    unique_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
+    token_value = hashlib.sha256(f"{credentials.username}{credentials.password}{app.secret_key}{unique_time}".encode()).hexdigest()
+    app.token.append(token_value)
+    if len(app.token) > 3:
+        app.token.pop(0)
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content={"token": token_value})
 
 
 @app.get("/welcome_session")
 def welcome_session(request: Request, format: Optional[str] = None):
     session_token = request.cookies.get("session_token")
-    if not session_token or session_token != app.session:
+    if not session_token or session_token not in app.session:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED
         )
@@ -179,7 +185,7 @@ def welcome_session(request: Request, format: Optional[str] = None):
 
 @app.get("/welcome_token")
 def welcome_token(token: Optional[str] = None, format: Optional[str] = None):
-    if not token or token != app.token:
+    if not token or token not in app.token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED
         )
@@ -221,12 +227,12 @@ def logged_out(format: Optional[str] = None):
 
 @app.delete("/logout_token")
 def welcome_token(token: Optional[str] = None, format: Optional[str] = None):
-    if not token or token != app.token:
+    if not token or token not in app.token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED
         )
     else:
-        app.token = ""
+        app.token.remove(token)
         return RedirectResponse(
             url=f"/logged_out?format={format}",
             status_code=status.HTTP_303_SEE_OTHER,
@@ -236,12 +242,12 @@ def welcome_token(token: Optional[str] = None, format: Optional[str] = None):
 @app.delete("/logout_session")
 def welcome_session(request: Request, format: Optional[str] = None):
     session_token = request.cookies.get("session_token")
-    if not session_token or session_token != app.session:
+    if not session_token or session_token not in app.session:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED
         )
     else:
-        app.session = ""
+        app.session.remove(session_token)
         return RedirectResponse(
             url=f"/logged_out?format={format}",
             status_code=status.HTTP_303_SEE_OTHER,
