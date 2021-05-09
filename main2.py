@@ -284,3 +284,16 @@ async def get_customers():
     return {
         "customers": customers,
     }
+
+
+@app.get("/products/{idd}", status_code=200)
+async def get_product(idd: int):
+    app.db_connection.row_factory = lambda cursor, x: {"id": x[0], "name": x[1]}
+    cursor = app.db_connection.cursor()
+    product = cursor.execute(f"SELECT ProductID, ProductName FROM Products WHERE ProductID = {idd}").fetchone()
+    if product is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+    else:
+        return product
