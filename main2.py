@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, status, HTTPException, Depends, Cookie
+from fastapi import FastAPI, Request, status, HTTPException, Depends
 from pydantic import BaseModel
 import hashlib
 from fastapi.responses import JSONResponse, HTMLResponse, Response, PlainTextResponse, RedirectResponse
@@ -7,6 +7,7 @@ from datetime import timedelta, datetime, date
 from fastapi.templating import Jinja2Templates
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import secrets
+import sqlite3
 
 
 app = FastAPI()
@@ -121,44 +122,44 @@ def hello_html(request: Request):
 
 @app.post("/login_session")
 def login_session(credentials: HTTPBasicCredentials = Depends(security)):
-    # correct_username = secrets.compare_digest(credentials.username, "4dm1n")
-    # correct_password = secrets.compare_digest(credentials.password, "NotSoSecurePa$$")
-    # if not (correct_username and correct_password):
-    #     raise HTTPException(
-    #         status_code=status.HTTP_401_UNAUTHORIZED,
-    #         detail="Incorrect username or password",
-    #         headers={"WWW-Authenticate": "Basic"},
-    #     )
-    # else:
-    unique_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
-    session_token = hashlib.sha256(f"{credentials.username}{credentials.password}{app.secret_key}{unique_time}".encode()).hexdigest()
-    app.session.append(session_token)
-    if len(app.session) > 3:
-        app.session.pop(0)
-    response = JSONResponse(status_code=status.HTTP_201_CREATED)
-    response.set_cookie(key="session_token", value=session_token)
-    return response
+    correct_username = secrets.compare_digest(credentials.username, "4dm1n")
+    correct_password = secrets.compare_digest(credentials.password, "NotSoSecurePa$$")
+    if not (correct_username and correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    else:
+        unique_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
+        session_token = hashlib.sha256(f"{credentials.username}{credentials.password}{app.secret_key}{unique_time}".encode()).hexdigest()
+        app.session.append(session_token)
+        if len(app.session) > 3:
+            app.session.pop(0)
+        response = JSONResponse(status_code=status.HTTP_201_CREATED)
+        response.set_cookie(key="session_token", value=session_token)
+        return response
 
 
 @app.post("/login_token")
 def login_token(credentials: HTTPBasicCredentials = Depends(security)):
-    # correct_username = secrets.compare_digest(credentials.username, "4dm1n")
-    # correct_password = secrets.compare_digest(credentials.password, "NotSoSecurePa$$")
-    # if not (correct_username and correct_password):
-    #     raise HTTPException(
-    #         status_code=status.HTTP_401_UNAUTHORIZED,
-    #     )
-    # else:
-    unique_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
-    token_value = hashlib.sha256(f"{credentials.username}{credentials.password}{app.secret_key}{unique_time}".encode()).hexdigest()
-    app.token.append(token_value)
-    if len(app.token) > 3:
-        app.token.pop(0)
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content={"token": token_value})
+    correct_username = secrets.compare_digest(credentials.username, "4dm1n")
+    correct_password = secrets.compare_digest(credentials.password, "NotSoSecurePa$$")
+    if not (correct_username and correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+        )
+    else:
+        unique_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
+        token_value = hashlib.sha256(f"{credentials.username}{credentials.password}{app.secret_key}{unique_time}".encode()).hexdigest()
+        app.token.append(token_value)
+        if len(app.token) > 3:
+            app.token.pop(0)
+        return JSONResponse(status_code=status.HTTP_201_CREATED, content={"token": token_value})
 
 
 @app.get("/welcome_session")
-def welcome_session(request: Request, format: Optional[str] = None):
+def welcome_session(request: Request, format: Optional[str] = ""):
     session_token = request.cookies.get("session_token")
     if not session_token or session_token not in app.session:
         raise HTTPException(
@@ -252,3 +253,34 @@ def welcome_session(request: Request, format: Optional[str] = None):
             url=f"/logged_out?format={format}",
             status_code=status.HTTP_303_SEE_OTHER,
         )
+
+
+@app.on_event("startup")
+async def startup():
+    app.db_connection = sqlite3.connect("northwind.db")
+    app.db_connection.text_factory = lambda b: b.decode(errors="ignore")  # northwind specific
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    app.db_connection.close()
+
+
+@app.get("/categories")
+async def get_categories():
+    app.db_connection.row_factory = lambda cursor, x: {"id": x[0], "name": x[1]}
+    cursor = app.db_connection.cursor()
+    categories = cursor.execute("SELECT CategoryId, CategoryName FROM Categories ORDER BY CategoryId").fetchall()
+    return {
+        "categories": categories,
+    }
+
+
+@app.get("/customers")
+async def get_customers():
+    app.db_connection.row_factory = lambda cursor, x: {"id": x[0], "name": x[1]}
+    cursor = app.db_connection.cursor()
+    customers = cursor.execute("SELECT CustomerId, CompanyName FROM Customers ORDER BY CustomerId").fetchall()
+    return {
+        "customers": customers,
+    }
