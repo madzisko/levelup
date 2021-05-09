@@ -300,18 +300,27 @@ async def get_product(idd: int):
 
 
 @app.get("/employees")
-async def get_employees(order: Optional[str] = None, limit: int = 9, offset: int = 0):
+async def get_employees(order: Optional[str] = None, limit: Optional[int] = None, offset: Optional[int] = None):
     order_accepted = ["last_name", "first_name",  "city"]
-    if order is None or order not in order_accepted:
+    if order is not None and order not in order_accepted:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST
         )
     else:
-        ind = order_accepted.index(order)
-        order_db = ["LastName", "FirstName", "City"]
         app.db_connection.row_factory = lambda cursor, x: {"id": x[0], "last_name": x[1], "first_name": x[2], "city": x[3]}
         cursor = app.db_connection.cursor()
-        employees = cursor.execute(f"SELECT EmployeeID, LastName, FirstName, City FROM Employees ORDER BY {order_db[ind]} LIMIT {limit} OFFSET {offset}").fetchall()
+        query_str = "SELECT EmployeeID, LastName, FirstName, City FROM Employees ORDER BY "
+        if order is None:
+            query_str += "EmployeeID "
+        else:
+            ind = order_accepted.index(order)
+            order_db = ["LastName", "FirstName", "City"]
+            query_str += f"{order_db[ind]} "
+        if limit is not None:
+            query_str += f"LIMIT {limit} "
+        if offset is not None:
+            query_str += f"OFFSET {offset}"
+        employees = cursor.execute(query_str).fetchall()
         return {
             "employees": employees,
         }
