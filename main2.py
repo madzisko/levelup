@@ -278,9 +278,9 @@ async def get_categories():
 
 @app.get("/customers")
 async def get_customers():
-    app.db_connection.row_factory = lambda cursor, x: {"id": x[0], "name": x[1]}
+    app.db_connection.row_factory = lambda cursor, x: {"id": x[0], "name": x[1], "full_address": x[2]}
     cursor = app.db_connection.cursor()
-    customers = cursor.execute("SELECT CustomerId, CompanyName FROM Customers ORDER BY CustomerId").fetchall()
+    customers = cursor.execute("SELECT CustomerId, CompanyName, (COALESCE(Address, '') || ' ' || COALESCE(PostalCode, '') || ' ' || COALESCE(City, '') || ' ' || COALESCE(Country, '')) FROM Customers ORDER BY UPPER(CustomerId)").fetchall()
     return {
         "customers": customers,
     }
