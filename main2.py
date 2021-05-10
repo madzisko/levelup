@@ -38,6 +38,10 @@ class PatientResp(BaseModel):
     vaccination_date: date
 
 
+class Category(BaseModel):
+    name: str
+
+
 @app.get("/")
 def root():
     return {"message": "Hello world!"}
@@ -354,3 +358,40 @@ async def get_product(idd: int):
         return {
             "orders": order,
         }
+
+
+@app.post("/categories", status_code=status.HTTP_201_CREATED)
+async def add_category(category: Category):
+    app.db_connection.row_factory = lambda cursor, x: {"id": x[0], "name": x[1]}
+    cursor = app.db_connection.execute(f"INSERT INTO Categories(CategoryName) VALUES('{category.name}')")
+    app.db_connection.commit()
+    new_category_id = cursor.lastrowid
+
+    new_category = cursor.execute(f"SELECT CategoryID, CategoryName FROM Categories WHERE CategoryID = {new_category_id}").fetchone()
+    return new_category
+
+
+@app.put("/categories/{idd}", status_code=status.HTTP_200_OK)
+async def add_category(idd: int, category: Category):
+    app.db_connection.row_factory = lambda cursor, x: {"id": x[0], "name": x[1]}
+    cursor = app.db_connection.execute(f"UPDATE Categories SET CategoryName = '{category.name}' WHERE CategoryID = {idd}")
+    if cursor.rowcount == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+    else:
+        app.db_connection.commit()
+        new_category = cursor.execute(f"SELECT CategoryID, CategoryName FROM Categories WHERE CategoryID = {idd}").fetchone()
+        return new_category
+
+
+@app.delete("/categories/{idd}", status_code=status.HTTP_200_OK)
+async def add_category(idd: int):
+    cursor = app.db_connection.execute(f"DELETE FROM Categories WHERE CategoryID = {idd}")
+    if cursor.rowcount == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+    else:
+        app.db_connection.commit()
+        return {"deleted": 1}
