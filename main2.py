@@ -335,3 +335,22 @@ async def get_product_ex():
     return {
         "products_extended": products_extended,
     }
+
+
+@app.get("/products/{idd}/orders", status_code=200)
+async def get_product(idd: int):
+    app.db_connection.row_factory = lambda cursor, x: {"id": x[0], "customer": x[1], "quantity": x[2], "total_price": x[3]}
+    cursor = app.db_connection.cursor()
+    order = cursor.execute(f"SELECT Orders.OrderID, CompanyName, Quantity, round(((1-Discount) * (UnitPrice*Quantity)),2) as TotalPrice FROM Orders "
+                           f"INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID "
+                           f"INNER JOIN [Order Details] OrderDetails ON Orders.OrderID = OrderDetails.OrderID "
+                           f"WHERE OrderDetails.ProductID = {idd} "
+                           f"ORDER BY Orders.OrderID").fetchall()
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+    else:
+        return {
+            "orders": order,
+        }
