@@ -324,3 +324,14 @@ async def get_employees(order: Optional[str] = None, limit: Optional[int] = None
         return {
             "employees": employees,
         }
+
+
+@app.get("/products_extended", status_code=200)
+async def get_product_ex():
+    app.db_connection.row_factory = lambda cursor, x: {"id": x[0], "name": x[1], "category": x[2], "supplier": x[3]}
+    cursor = app.db_connection.cursor()
+    products_extended = cursor.execute(
+        "SELECT ProductId, ProductName, CategoryName, CompanyName FROM Products INNER JOIN Categories ON Products.ProductID = Categories.CategoryID INNER JOIN Suppliers ON Products.ProductID = Suppliers.SupplierID ORDER BY UPPER(ProductId)").fetchall()
+    return {
+        "products_extended": products_extended,
+    }
