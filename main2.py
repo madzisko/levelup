@@ -284,7 +284,8 @@ async def get_categories():
 async def get_customers():
     app.db_connection.row_factory = lambda cursor, x: {"id": x[0], "name": x[1], "full_address": x[2]}
     cursor = app.db_connection.cursor()
-    customers = cursor.execute("SELECT CustomerId, CompanyName, (COALESCE(Address, '') || ' ' || COALESCE(PostalCode, '') || ' ' || COALESCE(City, '') || ' ' || COALESCE(Country, '')) FROM Customers ORDER BY UPPER(CustomerId)").fetchall()
+    customers = cursor.execute("SELECT CustomerId, CompanyName, (COALESCE(Address, '') || ' ' || COALESCE(PostalCode, '') || ' ' || COALESCE(City, '') || ' ' || COALESCE(Country, '')) FROM Customers "
+                               "ORDER BY UPPER(CustomerId)").fetchall()
     return {
         "customers": customers,
     }
@@ -335,7 +336,10 @@ async def get_product_ex():
     app.db_connection.row_factory = lambda cursor, x: {"id": x[0], "name": x[1], "category": x[2], "supplier": x[3]}
     cursor = app.db_connection.cursor()
     products_extended = cursor.execute(
-        "SELECT ProductId, ProductName, CategoryName, CompanyName FROM Products INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID INNER JOIN Suppliers ON Products.SupplierID = Suppliers.SupplierID ORDER BY ProductId").fetchall()
+        "SELECT ProductId, ProductName, CategoryName, CompanyName FROM Products "
+        "INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID "
+        "INNER JOIN Suppliers ON Products.SupplierID = Suppliers.SupplierID "
+        "ORDER BY ProductId").fetchall()
     return {
         "products_extended": products_extended,
     }
