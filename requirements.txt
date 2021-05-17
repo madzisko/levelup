@@ -45,3 +45,4 @@ websockets==8.1
 zipp==3.4.1
 
 SQLAlchemy~=1.4.15
+psycopg2==2.8.6
