@@ -43,3 +43,5 @@ uvicorn==0.13.4
 watchgod==0.7
 websockets==8.1
 zipp==3.4.1
+
+SQLAlchemy~=1.4.15
