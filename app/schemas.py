@@ -1,5 +1,6 @@
 from pydantic import BaseModel, PositiveInt, constr
 from typing import Optional
+from typing_extensions import TypedDict
 
 
 class Shipper(BaseModel):
@@ -32,6 +33,24 @@ class Supplier(BaseModel):
 class Suppliers(BaseModel):
     SupplierID: PositiveInt
     CompanyName: constr(max_length=40)
+
+    class Config:
+        orm_mode = True
+
+
+class Category(BaseModel):
+    CategoryID: PositiveInt
+    CategoryName: str
+
+    class Config:
+        orm_mode = True
+
+
+class Products(BaseModel):
+    ProductID: Optional[PositiveInt]
+    ProductName: Optional[constr(max_length=40)]
+    Category: Optional[Category]
+    Discontinued: Optional[int]
 
     class Config:
         orm_mode = True
